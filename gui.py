@@ -8,7 +8,9 @@ from PyQt6.QtGui import QPixmap
 class Gui:
     """Home security GUI."""
 
+    LOCK_SIZE = (100, 100)
     MAP_SIZE = (600, 250)
+    MAP_MARGIN = 50
     SENSOR_SIZE = 20
     SENSOR_ROUND = f"border-radius: {SENSOR_SIZE / 2}px;"
     SENSOR_GREEN = "border: 2px solid white; background: #3ef734;"
@@ -19,16 +21,22 @@ class Gui:
         'Front door': (212, 222),
     }
 
-    def __init__(self, sensors_names, close_callback):
+    def __init__(self, sensors_names,
+                 close_callback, arm_callback, unarm_callback):
         """Initializator."""
         self._sensors_names = sensors_names
         self._sensors = {}
         self._close_callback = close_callback
+        self._arm_callback = arm_callback
+        self._unarm_callback = unarm_callback
         self._map = None
+        self._lock = None
+        self._unlock = None
         self._app = QApplication([])
         self._main_window = QWidget()
         self._init_main_window()
         self._init_map()
+        self._init_locks()
         self._init_sensors()
 
     def _init_main_window(self):
@@ -48,8 +56,31 @@ class Gui:
         # Center the element
         window_width = self._main_window.frameGeometry().width()
         x_pos = (window_width - self.MAP_SIZE[0]) // 2
-        self._map.move(x_pos, 50)
+        self._map.move(x_pos, self.MAP_MARGIN)
         self._map.show()
+    
+    def _init_locks(self):
+        """Init locks."""
+        # Calculate position
+        window_width = self._main_window.frameGeometry().width()
+        x = (window_width - self.LOCK_SIZE[0]) // 2
+        y = self._map.frameGeometry().height() + self.MAP_MARGIN*2
+        # Init lock
+        self._lock = QLabel(self._main_window)
+        lock_pixmap = QPixmap("images/locked.png")
+        self._lock.resize(*self.LOCK_SIZE)
+        self._lock.setPixmap(lock_pixmap.scaled(self._lock.size()))
+        self._lock.show()
+        self._lock.move(x, y)
+        self._lock.mousePressEvent = self._unarm_callback
+        # Init unlock
+        self._unlock = QLabel(self._main_window)
+        unlock_pixmap = QPixmap("images/unlocked.png")
+        self._unlock.resize(*self.LOCK_SIZE)
+        self._unlock.setPixmap(unlock_pixmap.scaled(self._unlock.size()))
+        self._unlock.show()
+        self._unlock.move(x, y)
+        self._unlock.mousePressEvent = self._arm_callback
     
     def _init_sensors(self):
         """Init sensors."""
@@ -80,3 +111,12 @@ class Gui:
             # Only force rerender if status is changed
             if style != self._sensors[sensor['location']].styleSheet():
                 self._sensors[sensor['location']].setStyleSheet(style)
+    
+    def update_lock(self, arm_status):
+        """Update lock based on data."""
+        if arm_status['state'] == 'Unarmed':
+            self._unlock.show()
+            self._lock.hide()
+        else:
+            self._unlock.hide()
+            self._lock.show()

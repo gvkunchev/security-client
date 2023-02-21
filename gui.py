@@ -19,22 +19,24 @@ class Gui:
         'Front door': (212, 222),
     }
 
-    def __init__(self, sensors_names):
+    def __init__(self, sensors_names, close_callback):
         """Initializator."""
         self._sensors_names = sensors_names
         self._sensors = {}
+        self._close_callback = close_callback
         self._map = None
         self._app = QApplication([])
         self._main_window = QWidget()
         self._init_main_window()
         self._init_map()
         self._init_sensors()
-        self._run()
 
     def _init_main_window(self):
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
-        self._main_window.showFullScreen()
+        # TODO: switch the window size
+        self._main_window.show()
+        #self._main_window.showFullScreen()
     
     def _init_map(self):
         """Init home map."""
@@ -57,13 +59,24 @@ class Gui:
             y = self._map.pos().y() + self.SENSOR_COORDS[sensor_name][1]
             sensor.move(x, y)
             sensor.resize(self.SENSOR_SIZE, self.SENSOR_SIZE)
-            sensor.setStyleSheet(self.SENSOR_GREEN)
             sensor.setStyleSheet(self.SENSOR_ROUND + self.SENSOR_GREEN)
             sensor.show()
             self._sensors[sensor_name] = sensor
 
-    def _run(self):
+    def run(self):
         """Run the app."""
         qdarktheme.setup_theme()
-        sys.exit(self._app.exec())
-
+        self._app.exec()
+        self._close_callback()
+        sys.exit(0)
+    
+    def update_sensors(self, sensor_data):
+        """Update sensors based on data."""
+        for sensor in sensor_data:
+            if sensor['state'] == 'Open':
+                style = self.SENSOR_ROUND + self.SENSOR_RED
+            else:
+                style = self.SENSOR_ROUND + self.SENSOR_GREEN
+            # Only force rerender if status is changed
+            if style != self._sensors[sensor['location']].styleSheet():
+                self._sensors[sensor['location']].setStyleSheet(style)

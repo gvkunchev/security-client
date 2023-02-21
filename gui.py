@@ -7,6 +7,7 @@ from PyQt5.QtGui import QPixmap
 class Gui:
     """Home security GUI."""
 
+    WINDOW_WIDTH = 800
     MAIN_STYLE = "background-color: #28382c;"
     LOCK_SIZE = (100, 100)
     MAP_SIZE = (600, 250)
@@ -38,14 +39,20 @@ class Gui:
         self._init_map()
         self._init_locks()
         self._init_sensors()
+    
+    def get_window_width(self):
+        """Get window width."""
+        return self.WINDOW_WIDTH
+        # The line below producec wrong result on the Pi display
+        # so instead of using it, the value is hardcoded.
+        return self._main_window.frameGeometry().width()
 
     def _init_main_window(self):
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
         self._main_window.setStyleSheet(self.MAIN_STYLE)
-        # TODO: switch the window size
-        self._main_window.show()
-        #self._main_window.showFullScreen()
+        #self._main_window.show()
+        self._main_window.showFullScreen()
     
     def _init_map(self):
         """Init home map."""
@@ -55,7 +62,7 @@ class Gui:
         self._map.resize(*self.MAP_SIZE)
         self._map.setPixmap(pixmap.scaled(self._map.size()))
         # Center the element
-        window_width = self._main_window.frameGeometry().width()
+        window_width = self.get_window_width()
         x_pos = (window_width - self.MAP_SIZE[0]) // 2
         self._map.move(x_pos, self.MAP_MARGIN)
         self._map.show()
@@ -63,7 +70,7 @@ class Gui:
     def _init_locks(self):
         """Init locks."""
         # Calculate position
-        window_width = self._main_window.frameGeometry().width()
+        window_width = self.get_window_width()
         x = (window_width - self.LOCK_SIZE[0]) // 2
         y = self._map.frameGeometry().height() + self.MAP_MARGIN*2
         # Init lock

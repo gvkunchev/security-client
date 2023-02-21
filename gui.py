@@ -2,6 +2,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 
 
 class Gui:
@@ -51,6 +52,7 @@ class Gui:
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
         self._main_window.setStyleSheet(self.MAIN_STYLE)
+        self._main_window.setCursor(Qt.BlankCursor)
         #self._main_window.show()
         self._main_window.showFullScreen()
     

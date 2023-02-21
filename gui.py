@@ -1,13 +1,13 @@
 import sys
 
-import qdarktheme
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget
-from PyQt6.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget
+from PyQt5.QtGui import QPixmap
 
 
 class Gui:
     """Home security GUI."""
 
+    MAIN_STYLE = "background-color: #28382c;"
     LOCK_SIZE = (100, 100)
     MAP_SIZE = (600, 250)
     MAP_MARGIN = 50
@@ -42,6 +42,7 @@ class Gui:
     def _init_main_window(self):
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
+        self._main_window.setStyleSheet(self.MAIN_STYLE)
         # TODO: switch the window size
         self._main_window.show()
         #self._main_window.showFullScreen()
@@ -96,7 +97,6 @@ class Gui:
 
     def run(self):
         """Run the app."""
-        qdarktheme.setup_theme()
         self._app.exec()
         self._close_callback()
         sys.exit(0)

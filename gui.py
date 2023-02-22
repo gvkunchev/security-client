@@ -264,7 +264,7 @@ class Gui:
         if arm_status['state'] == 'Unarmed':
             self._lock.hide()
             self._unlock.show()
-        elif arm_status['state'] == 'Armed':
+        elif arm_status['state'] in ('Armed', 'Disarming'):
             self._unlock.hide()
             self._lock.show()
         else:

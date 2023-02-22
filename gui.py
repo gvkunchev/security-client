@@ -1,10 +1,111 @@
 """Security client GUI."""
 
+import random
 import sys
 
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter, QPen
+from PyQt5.QtCore import Qt, QLine, QPoint
+
+
+class PasswordWidget(QWidget):
+    """Password prompt widget."""
+
+    MAIN_STYLE = "background-color: #28382c;"
+    WINDOW_SIZE = (290, 290)
+    POSITION_RANGE = (0, 400)
+    BUTTON_COUNT = 9
+    BUTTON_SIZE = 70
+    BUTTON_MARGIN = 20
+    BUTTON_STYLE_DEF = ('background: white; border: 1px solid blue;'
+                        'border-radius: 25px; font-size: 25px;')
+    BUTTON_STYLE_SEL = ('background: #bac6ff; border: 1px solid blue;'
+                        'border-radius: 25px; font-size: 25px;')
+    LINE_THICKNESS = 10
+    LINE_COLOR = Qt.blue
+
+    def __init__(self,):
+        """initializator."""
+        self._mouse_path = []
+        self._buttons = []
+        self._lines = []
+        self._callback = None
+        super().__init__()
+        self.setStyleSheet(self.MAIN_STYLE)
+        self.resize(*self.WINDOW_SIZE)
+        self._populate_digits()
+
+    def _populate_digits(self):
+        """Populate the widget with digits."""
+        for digit in range(self.BUTTON_COUNT):
+            button = QLabel(str(digit + 1), self)
+            button.resize(self.BUTTON_SIZE, self.BUTTON_SIZE)
+            x_pos = self.BUTTON_MARGIN + (digit % 3) * (self.BUTTON_SIZE + self.BUTTON_MARGIN)
+            y_pos = self.BUTTON_MARGIN + (digit // 3) * (self.BUTTON_SIZE + self.BUTTON_MARGIN)
+            button.move(x_pos, y_pos)
+            button.setStyleSheet(self.BUTTON_STYLE_DEF)
+            button.setAlignment(Qt.AlignCenter)
+            self._buttons.append(button)
+
+    def _reset_buttons(self):
+        """Reset buttons after pattern is selected."""
+        for button in self._buttons:
+            button.setStyleSheet(self.BUTTON_STYLE_DEF)
+        self._lines = []
+        self._mouse_path = None
+
+    def paintEvent(self, event):
+        """Paiting on the window."""
+        painter = QPainter(self)
+        pen = QPen(self.LINE_COLOR, self.LINE_THICKNESS)
+        painter.setPen(pen)
+        if len(self._lines) > 0:
+            for line in self._lines:
+                painter.drawLine(line)
+        self.update()
+        super().paintEvent(event)
+
+    def show(self, callback):
+        """Show the widget."""
+        self._reset_buttons()
+        self.move(random.randrange(*self.POSITION_RANGE),
+                  random.randrange(*self.POSITION_RANGE))
+        self._callback = callback
+        super().show()
+
+    def mousePressEvent(self, event):
+        """On mouse press."""
+        if event.button() == Qt.LeftButton:
+            self._mouse_path = []
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """On mouse release."""
+        if event.button() == Qt.LeftButton:
+            self.hide()
+            self._callback(''.join(map(QLabel.text, self._mouse_path)))
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """On mouse move."""
+        if self._mouse_path is not None:
+            mouse_pos = event.pos()
+            for button in self._buttons:
+                button_pos = button.pos()
+                if (mouse_pos.x() > button_pos.x() and
+                    mouse_pos.y() > button_pos.y() and
+                    mouse_pos.x() < button_pos.x() + self.BUTTON_SIZE and
+                    mouse_pos.y() < button_pos.y() + self.BUTTON_SIZE):
+                    if button not in self._mouse_path:
+                        button.setStyleSheet(self.BUTTON_STYLE_SEL)
+                        self._mouse_path.append(button)
+                        if len(self._mouse_path) >= 2:
+                            offset = QPoint(self.BUTTON_SIZE // 2,
+                                            self.BUTTON_SIZE // 2)
+                            start = self._mouse_path[-2].pos() + offset
+                            end = self._mouse_path[-1].pos() + offset
+                            self._lines.append(QLine(start, end))
+        return super().mouseMoveEvent(event)
 
 
 class Gui:
@@ -37,6 +138,7 @@ class Gui:
         self._lock = None
         self._unlock = None
         self._app = QApplication([])
+        self._pass_window = PasswordWidget()
         self._main_window = QWidget()
         self._init_main_window()
         self._init_map()
@@ -132,3 +234,8 @@ class Gui:
             self._unlock.hide()
             self._lock.setGraphicsEffect(None)
             self._lock.show()
+    
+    def get_pattern(self, callback):
+        """Show pattern widget and return the result."""
+        self._pass_window.show(callback)
+

@@ -26,6 +26,14 @@ class Security:
             Timer(self.TIME_DELTA, self._monitor_server).start()
         self._gui.update_sensors(self._api.get_sensors_data())
         self._gui.update_lock(self._api.get_arm_data())
+    
+    def _verify_pattern(self, pattern):
+        """Verify pattern."""
+        response = self._api.verify(pattern)
+        if response['result'] == 'OK':
+            self._api.unarm()
+        else:
+            self._gui.get_pattern(self._verify_pattern)
 
     def on_arm(self, _):
         """On clicking the lock to arm home."""
@@ -33,8 +41,7 @@ class Security:
 
     def on_unarm(self, _):
         """On clicking the lock to unarm home."""
-        # TODO: verify password
-        self._api.unarm()
+        self._gui.get_pattern(self._verify_pattern)
 
     def on_exit(self):
         """On exit"""

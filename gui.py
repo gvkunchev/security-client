@@ -1,5 +1,6 @@
 """Security client GUI."""
 
+import os
 import random
 import sys
 
@@ -7,6 +8,9 @@ from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 from PyQt5.QtGui import QPixmap, QPainter, QPen
 from PyQt5.QtCore import Qt, QLine, QPoint
 
+
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+IMAGES_PATH = os.path.join(BASE_PATH, 'images')
 
 class PasswordWidget(QWidget):
     """Password prompt widget."""
@@ -166,7 +170,7 @@ class Gui:
         """Init home map."""
         # Create label with image as content
         self._map = QLabel(self._main_window)
-        pixmap = QPixmap("images/map.png")
+        pixmap = QPixmap(os.path.join(IMAGES_PATH, "map.png"))
         self._map.resize(*self.MAP_SIZE)
         self._map.setPixmap(pixmap.scaled(self._map.size()))
         # Center the element
@@ -183,7 +187,7 @@ class Gui:
         y_pos = self._map.frameGeometry().height() + self.MAP_MARGIN*2
         # Init lock
         self._lock = QLabel(self._main_window)
-        lock_pixmap = QPixmap("images/locked.png")
+        lock_pixmap = QPixmap(os.path.join(IMAGES_PATH, "locked.png"))
         self._lock.resize(*self.LOCK_SIZE)
         self._lock.setPixmap(lock_pixmap.scaled(self._lock.size()))
         self._lock.show()
@@ -191,7 +195,7 @@ class Gui:
         self._lock.mousePressEvent = self._unarm_callback
         # Init unlock
         self._unlock = QLabel(self._main_window)
-        unlock_pixmap = QPixmap("images/unlocked.png")
+        unlock_pixmap = QPixmap(os.path.join(IMAGES_PATH, "unlocked.png"))
         self._unlock.resize(*self.LOCK_SIZE)
         self._unlock.setPixmap(unlock_pixmap.scaled(self._unlock.size()))
         self._unlock.show()

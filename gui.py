@@ -1,6 +1,7 @@
 """Security client GUI."""
 
 import os
+import platform
 import random
 import sys
 
@@ -163,7 +164,8 @@ class Gui:
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
         self._main_window.setStyleSheet(self.MAIN_STYLE)
-        #self._main_window.setCursor(Qt.BlankCursor) # TODO: Put this line back
+        if platform.system() == 'Linux':
+            self._main_window.setCursor(Qt.BlankCursor)
         self._main_window.showFullScreen()
 
     def _init_map(self):

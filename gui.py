@@ -170,7 +170,7 @@ class Gui:
     
     def _get_time(self):
         """Get time as formatted string."""
-        return datetime.now().strftime('%A, %d %B, %Y\n%H:%m:%S')
+        return datetime.now().strftime('%A, %d %B, %Y\n%H:%M:%S')
     
     def _update_clock(self):
         """Update clock every second."""

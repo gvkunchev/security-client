@@ -1,3 +1,5 @@
+"""Security client controller."""
+
 from threading import Timer
 
 from api import Api
@@ -8,7 +10,7 @@ class Security:
     """Security controller."""
 
     SENSORS = ['Bed room', 'Kid room', 'Front door']
-    TIME_DELTA = 1 # Time between server sensor checks 
+    TIME_DELTA = 1 # Time between server sensor checks
 
     def __init__(self):
         """Initializator."""
@@ -24,17 +26,15 @@ class Security:
             Timer(self.TIME_DELTA, self._monitor_server).start()
         self._gui.update_sensors(self._api.get_sensors_data())
         self._gui.update_lock(self._api.get_arm_data())
-    
+
     def on_arm(self, _):
         """On clicking the lock to arm home."""
         self._api.arm()
-        self._gui.update_lock(self._api.get_arm_data())
-    
+
     def on_unarm(self, _):
         """On clicking the lock to unarm home."""
         # TODO: verify password
         self._api.unarm()
-        self._gui.update_lock(self._api.get_arm_data())
 
     def on_exit(self):
         """On exit"""

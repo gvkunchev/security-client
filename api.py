@@ -3,6 +3,10 @@
 import requests
 
 
+class SecurityServerError(Exception):
+    pass
+
+
 class Api:
     """Server API."""
 
@@ -19,18 +23,33 @@ class Api:
                 else:
                     link += '&'
                 link += (f'{key}={val}')
-        response = requests.get(link)
+        try:
+            response = requests.get(link)
+        except:
+            raise SecurityServerError('Unable to connect to the server.')
         if response.status_code != 200:
-            raise Exception('Unable to connect to the server.')
+            raise SecurityServerError(f'Server responds with {response.status_code}.')
         return response.json()
 
     def get_sensors_data(self):
         """Get sensors data."""
-        return self._send_request("get_sensor_status")
+        try:
+            return self._send_request("get_sensor_status")
+        except SecurityServerError:
+            # Server is down
+            return [
+                {"location": "Bed room", "state": "Unknown"},
+                {"location": "Kid room", "state": "Unknown"},
+                {"location": "Front door", "state": "Unknown"}
+            ]
 
     def get_arm_data(self):
         """Get arm data."""
-        return self._send_request("get_arm_status")
+        try:
+            return self._send_request("get_arm_status")
+        except SecurityServerError:
+            # Server is down
+            return {"location": "Home", "state": "Unknown"}
 
     def arm(self):
         """Set arm state."""

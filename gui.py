@@ -122,6 +122,7 @@ class Gui:
     SENSOR_ROUND = f"border-radius: {SENSOR_SIZE / 2}px;"
     SENSOR_GREEN = "border: 2px solid white; background: #3ef734;"
     SENSOR_RED = "border: 2px solid white; background: red;"
+    SENSOR_YELLOW = "border: 2px solid white; background: yellow;"
     SENSOR_COORDS = {
         'Bed room': (45, 168),
         'Kid room': (45, 100),
@@ -220,8 +221,10 @@ class Gui:
         for sensor in sensor_data:
             if sensor['state'] == 'Open':
                 style = self.SENSOR_ROUND + self.SENSOR_RED
-            else:
+            elif sensor['state'] == 'Closed':
                 style = self.SENSOR_ROUND + self.SENSOR_GREEN
+            else:
+                style = self.SENSOR_ROUND + self.SENSOR_YELLOW
             # Only force rerender if status is changed
             if style != self._sensors[sensor['location']].styleSheet():
                 self._sensors[sensor['location']].setStyleSheet(style)
@@ -230,12 +233,13 @@ class Gui:
         """Update lock based on data."""
         if arm_status['state'] == 'Unarmed':
             self._lock.hide()
-            self._unlock.setGraphicsEffect(None)
             self._unlock.show()
+        elif arm_status['state'] == 'Armed':
+            self._unlock.hide()
+            self._lock.show()
         else:
             self._unlock.hide()
-            self._lock.setGraphicsEffect(None)
-            self._lock.show()
+            self._lock.hide()
     
     def get_pattern(self, callback):
         """Show pattern widget and return the result."""

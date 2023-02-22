@@ -2,6 +2,13 @@
 Home security client
 
 * Running
-/etc/rc.local:
+mkdir /home/pi/.config/autostart/
 
-sudo -H -u pi python /home/pi/Desktop/security-client/controller.py
+vim /home/pi/.config/autostart/SecurityClient.desktop:
+[Desktop Entry]
+Name=Security Client
+Type=Application
+Comment=Home Security Client GUI
+Exec=/usr/bin/python /home/pi/Desktop/security-client/controller.py
+
+chmod +x /home/pi/.config/autostart/SecurityClient.desktop

@@ -11,9 +11,9 @@ from PyQt5.QtCore import Qt, QLine, QPoint
 class PasswordWidget(QWidget):
     """Password prompt widget."""
 
-    MAIN_STYLE = "background-color: #28382c;"
     WINDOW_SIZE = (290, 290)
-    POSITION_RANGE = (0, 400)
+    POSITION_RANGE_X = (10, 400)
+    POSITION_RANGE_Y = (10, 100)
     BUTTON_COUNT = 9
     BUTTON_SIZE = 70
     BUTTON_MARGIN = 20
@@ -24,14 +24,15 @@ class PasswordWidget(QWidget):
     LINE_THICKNESS = 10
     LINE_COLOR = Qt.blue
 
-    def __init__(self,):
+    def __init__(self, parent):
         """initializator."""
         self._mouse_path = []
         self._buttons = []
         self._lines = []
         self._callback = None
-        super().__init__()
-        self.setStyleSheet(self.MAIN_STYLE)
+        super().__init__(parent)
+        self.hide()
+        self.setWindowFlags(Qt.CustomizeWindowHint)
         self.resize(*self.WINDOW_SIZE)
         self._populate_digits()
 
@@ -68,9 +69,10 @@ class PasswordWidget(QWidget):
     def show(self, callback):
         """Show the widget."""
         self._reset_buttons()
-        self.move(random.randrange(*self.POSITION_RANGE),
-                  random.randrange(*self.POSITION_RANGE))
+        self.move(random.randrange(*self.POSITION_RANGE_X),
+                  random.randrange(*self.POSITION_RANGE_Y))
         self._callback = callback
+        self.raise_()
         super().show()
 
     def mousePressEvent(self, event):
@@ -138,8 +140,8 @@ class Gui:
         self._lock = None
         self._unlock = None
         self._app = QApplication([])
-        self._pass_window = PasswordWidget()
         self._main_window = QWidget()
+        self._pass_window = PasswordWidget(self._main_window)
         self._init_main_window()
         self._init_map()
         self._init_locks()
@@ -156,7 +158,7 @@ class Gui:
         """Set up main window."""
         self._main_window.setWindowTitle("Home security")
         self._main_window.setStyleSheet(self.MAIN_STYLE)
-        #self._main_window.setCursor(Qt.BlankCursor) # TODO: Put back
+        self._main_window.setCursor(Qt.BlankCursor)
         self._main_window.showFullScreen()
 
     def _init_map(self):

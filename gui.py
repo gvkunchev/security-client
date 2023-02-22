@@ -1,5 +1,6 @@
 """Security client GUI."""
 
+from datetime import datetime
 import os
 import platform
 import random
@@ -7,11 +8,12 @@ import sys
 
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 from PyQt5.QtGui import QPixmap, QPainter, QPen
-from PyQt5.QtCore import Qt, QLine, QPoint
+from PyQt5.QtCore import Qt, QLine, QPoint, QTimer
 
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 IMAGES_PATH = os.path.join(BASE_PATH, 'images')
+
 
 class PasswordWidget(QWidget):
     """Password prompt widget."""
@@ -118,6 +120,7 @@ class PasswordWidget(QWidget):
 class Gui:
     """Home security GUI."""
 
+    TEXT_MARGIN = 10
     WINDOW_WIDTH = 800
     MAIN_STYLE = "background-color: #28382c;"
     LOCK_SIZE = (100, 100)
@@ -145,13 +148,33 @@ class Gui:
         self._map = None
         self._lock = None
         self._unlock = None
+        self._clock = None
+        self._timer = QTimer()
         self._app = QApplication([])
         self._main_window = QWidget()
         self._pass_window = PasswordWidget(self._main_window)
         self._init_main_window()
+        self._add_clock()
         self._init_map()
         self._init_locks()
         self._init_sensors()
+    
+    def _add_clock(self):
+        """Add clock."""
+        # Add the clock
+        self._clock = QLabel(self._get_time(), self._main_window)
+        self._clock.setStyleSheet("font-size: 20px; color: white;")
+        self._clock.move(self.TEXT_MARGIN, self.TEXT_MARGIN)
+        self._clock.show()
+        self._timer.timeout.connect(self._update_clock)
+    
+    def _get_time(self):
+        """Get time as formatted string."""
+        return datetime.now().strftime('%A, %d %B, %Y\n%H:%m:%S')
+    
+    def _update_clock(self):
+        """Update clock every second."""
+        self._clock.setText(self._get_time())
 
     def get_window_width(self):
         """Get window width."""
@@ -218,6 +241,7 @@ class Gui:
 
     def run(self):
         """Run the app."""
+        self._timer.start(1000)
         self._app.exec()
         self._close_callback()
         sys.exit(0)

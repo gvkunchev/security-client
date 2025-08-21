@@ -1,2 +1,1 @@
-* Add screensaver
 * Add calendar

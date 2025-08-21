@@ -1,0 +1,11 @@
+[Unit]
+Description=Raspberry Pi Touchscreen Idle Dimmer
+After=graphical.target
+
+[Service]
+ExecStart=/usr/local/bin/touchscreen-idle.sh
+Restart=always
+User=root
+
+[Install]
+WantedBy=default.target

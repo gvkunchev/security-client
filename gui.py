@@ -158,7 +158,7 @@ class Gui:
         self._init_map()
         self._init_locks()
         self._init_sensors()
-    
+
     def _add_clock(self):
         """Add clock."""
         # Add the clock
@@ -167,11 +167,11 @@ class Gui:
         self._clock.move(self.TEXT_MARGIN, self.TEXT_MARGIN)
         self._clock.show()
         self._timer.timeout.connect(self._update_clock)
-    
+
     def _get_time(self):
         """Get time as formatted string."""
         return datetime.now().strftime('%A, %d %B, %Y\n%H:%M:%S')
-    
+
     def _update_clock(self):
         """Update clock every second."""
         self._clock.setText(self._get_time())
@@ -270,7 +270,7 @@ class Gui:
         else:
             self._unlock.hide()
             self._lock.hide()
-    
+
     def get_pattern(self, callback):
         """Show pattern widget and return the result."""
         self._pass_window.show(callback)

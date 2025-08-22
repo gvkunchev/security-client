@@ -51,6 +51,13 @@ class Api:
             # Server is down
             return {"location": "Home", "state": "Unknown"}
 
+    def get_calendar(self):
+        """Get calendar data."""
+        try:
+            return self._send_request("get_calendar")
+        except SecurityServerError:
+            return None
+
     def arm(self):
         """Set arm state."""
         return self._send_request("arm")

@@ -11,6 +11,7 @@ class Security:
 
     SENSORS = ['Bed room', 'Kid room', 'Front door']
     TIME_DELTA = 1 # Time between server sensor checks
+    CALENDAR_TIME_DELTA = 5 * 60
 
     def __init__(self):
         """Initializator."""
@@ -18,6 +19,7 @@ class Security:
         self._api = Api()
         self._gui = Gui(self.SENSORS, self.on_exit, self.on_arm, self.on_unarm)
         self._monitor_server()
+        self._monitor_calendar()
         self._gui.run()
 
     def _monitor_server(self):
@@ -26,7 +28,13 @@ class Security:
             Timer(self.TIME_DELTA, self._monitor_server).start()
         self._gui.update_sensors(self._api.get_sensors_data())
         self._gui.update_lock(self._api.get_arm_data())
-    
+
+    def _monitor_calendar(self):
+        """Monitor calendar."""
+        if self._running:
+            Timer(self.CALENDAR_TIME_DELTA, self._monitor_calendar).start()
+        self._gui.update_calendar(self._api.get_calendar())
+
     def _verify_pattern(self, pattern):
         """Verify pattern."""
         response = self._api.verify(pattern)

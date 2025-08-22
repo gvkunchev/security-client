@@ -5,14 +5,39 @@ import os
 import platform
 import random
 import sys
+import pytz
 
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget
+
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QScrollArea, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QPainter, QPen
 from PyQt5.QtCore import Qt, QLine, QPoint, QTimer
 
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 IMAGES_PATH = os.path.join(BASE_PATH, 'images')
+LOCAL_TZ = pytz.timezone('Europe/Sofia')
+
+
+class ScrollLabel(QScrollArea):
+    """Scrollable multiline label."""
+
+    def __init__(self, *args, **kwargs):
+        """Initializator."""
+        QScrollArea.__init__(self, *args, **kwargs)
+        self.setWidgetResizable(True)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        content = QWidget(self)
+        self.setWidget(content)
+        lay = QVBoxLayout(content)
+        self.label = QLabel(content)
+        self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.label.setWordWrap(True)
+        lay.addWidget(self.label)
+
+    def set_text(self, text):
+        """Set the test on the label."""
+        self.label.setText(text)
 
 
 class PasswordWidget(QWidget):
@@ -124,6 +149,7 @@ class Gui:
     WINDOW_WIDTH = 800
     MAIN_STYLE = "background-color: #28382c;"
     LOCK_SIZE = (100, 100)
+    LOCK_MARGIN = 10
     MAP_SIZE = (600, 250)
     MAP_MARGIN = 50
     SENSOR_SIZE = 20
@@ -136,6 +162,8 @@ class Gui:
         'Kid room': (45, 100),
         'Front door': (212, 222),
     }
+    CALENDAR_STYLE = "border: 0px solid white; color: white; font-size: 15px;"
+    CALENAR_MAX_LENGTH = 40
 
     def __init__(self, sensors_names,
                  close_callback, arm_callback, unarm_callback):
@@ -149,6 +177,7 @@ class Gui:
         self._lock = None
         self._unlock = None
         self._clock = None
+        self._calendar = None
         self._timer = QTimer()
         self._app = QApplication([])
         self._main_window = QWidget()
@@ -158,6 +187,7 @@ class Gui:
         self._init_map()
         self._init_locks()
         self._init_sensors()
+        self._init_calendar()
 
     def _add_clock(self):
         """Add clock."""
@@ -207,8 +237,6 @@ class Gui:
     def _init_locks(self):
         """Init locks."""
         # Calculate position
-        window_width = self.get_window_width()
-        x_pos = (window_width - self.LOCK_SIZE[0]) // 2
         y_pos = self._map.frameGeometry().height() + self.MAP_MARGIN*2
         # Init lock
         self._lock = QLabel(self._main_window)
@@ -216,7 +244,7 @@ class Gui:
         self._lock.resize(*self.LOCK_SIZE)
         self._lock.setPixmap(lock_pixmap.scaled(self._lock.size()))
         self._lock.show()
-        self._lock.move(x_pos, y_pos)
+        self._lock.move(self.LOCK_MARGIN, y_pos)
         self._lock.mousePressEvent = self._unarm_callback
         # Init unlock
         self._unlock = QLabel(self._main_window)
@@ -224,7 +252,7 @@ class Gui:
         self._unlock.resize(*self.LOCK_SIZE)
         self._unlock.setPixmap(unlock_pixmap.scaled(self._unlock.size()))
         self._unlock.show()
-        self._unlock.move(x_pos, y_pos)
+        self._unlock.move(self.LOCK_MARGIN, y_pos)
         self._unlock.mousePressEvent = self._arm_callback
 
     def _init_sensors(self):
@@ -238,6 +266,18 @@ class Gui:
             sensor.setStyleSheet(self.SENSOR_ROUND + self.SENSOR_GREEN)
             sensor.show()
             self._sensors[sensor_name] = sensor
+
+    def _init_calendar(self):
+        """Init calendar list."""
+        lock_size = self.LOCK_SIZE[0]
+        width = self.get_window_width() - lock_size - self.LOCK_MARGIN * 4
+        y_pos = self._map.frameGeometry().height() + self.MAP_MARGIN*2
+        self._calendar = ScrollLabel(self._main_window)
+        self._calendar.resize(width, lock_size)
+        self._calendar.move(lock_size + self.LOCK_MARGIN * 2, y_pos)
+        self._calendar.setStyleSheet(self.CALENDAR_STYLE)
+        self._calendar.show()
+
 
     def run(self):
         """Run the app."""
@@ -274,4 +314,25 @@ class Gui:
     def get_pattern(self, callback):
         """Show pattern widget and return the result."""
         self._pass_window.show(callback)
+
+    def update_calendar(self, data):
+        """Update calendar's content."""
+        if not data:
+            text = "\nНяма събития"
+        else:
+            events = data["events"]
+            text_lines = []
+            for event in events:
+                utc_time_str = event["time"]
+                try:
+                    utc_time = datetime.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ")
+                    utc_datetime = pytz.utc.localize(utc_time)
+                    local_time = utc_datetime.astimezone(LOCAL_TZ)
+                    local_time_str = local_time.strftime("%Y-%m-%d %H:%M")
+                except ValueError:
+                    # Assume no time so just use the date
+                    local_time_str = utc_time_str
+                text_lines.append(local_time_str + " - " + event["summary"][:self.CALENAR_MAX_LENGTH])
+            text = '\n'.join(text_lines)
+        self._calendar.set_text(text)
 

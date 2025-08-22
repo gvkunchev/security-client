@@ -4,7 +4,6 @@ After=graphical.target
 
 [Service]
 ExecStart=/usr/local/bin/touchscreen-idle.sh
-Restart=always
 User=root
 
 [Install]

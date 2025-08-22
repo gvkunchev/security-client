@@ -10,18 +10,17 @@ FADE_TIME=10     # seconds to fade down
 STEPS=20         # how many steps in fade
 STEP_DELAY=$((FADE_TIME / STEPS))
 
-last_event=$(date +%s)
 fade_pid=0
 
-# Find touchscreen input automatically (FT5406 is the official one)
 TOUCH_DEV="event4"  # Adjust if needed (use "dd if=/dev/input/eventX" and start touching the screen to figure out)
 TOUCH_PATH="/dev/input/$TOUCH_DEV"
 
 restore_screen() {
-    # Cancel fade if running
+    # cancel fade if running
     if [ $fade_pid -ne 0 ] && kill -0 $fade_pid 2>/dev/null; then
         kill $fade_pid 2>/dev/null
         wait $fade_pid 2>/dev/null
+        fade_pid=0
     fi
     echo 0 > "$POWER_FILE"
     echo $MAX_BRIGHTNESS > "$BRIGHTNESS_FILE"
@@ -29,13 +28,20 @@ restore_screen() {
 
 fade_and_poweroff() {
     (
+        sleep $IDLE_TIME
+
+        # check again after sleep
+        if [ $(($(date +%s) - last_event)) -lt $IDLE_TIME ]; then
+            exit 0
+        fi
+
         current=$(cat "$BRIGHTNESS_FILE")
         step=$((current / STEPS))
         if (( step < 1 )); then step=1; fi
 
         for ((i=0; i<$STEPS; i++)); do
-            # stop fading early if new input came
-            if (( $(date +%s) - last_event < IDLE_TIME )); then
+            # stop fading early if user touched
+            if [ $(($(date +%s) - last_event)) -lt $IDLE_TIME ]; then
                 exit 0
             fi
             new_brightness=$((current - step * i))
@@ -51,19 +57,10 @@ fade_and_poweroff() {
     fade_pid=$!
 }
 
-# Monitor touch events
+# Start main loop
 libinput debug-events --device "$TOUCH_PATH" | while read -r line; do
     now=$(date +%s)
-
-    # On any input → wake screen immediately
-    restore_screen
     last_event=$now
-
-    # Background idle checker
-    (
-        sleep $IDLE_TIME
-        if (( $(date +%s) - last_event >= IDLE_TIME )); then
-            fade_and_poweroff
-        fi
-    ) &
+    restore_screen
+    fade_and_poweroff
 done
